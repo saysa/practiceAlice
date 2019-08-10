@@ -1,0 +1,9 @@
+App\Entity\Author:
+  author_1:
+    name: alain
+  author_2:
+    name: robert
+  author_3:
+    name: markus
+  author_4:
+    name: ines

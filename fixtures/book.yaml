@@ -1,0 +1,4 @@
+App\Entity\Book:
+  book_{1..10}:
+    title: <name()>
+    author: '@author*'

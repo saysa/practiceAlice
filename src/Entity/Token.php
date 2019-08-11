@@ -27,6 +27,12 @@ class Token
      */
     private $user;
 
+    public function __construct(User $user)
+    {
+        $this->user = $user;
+        $this->value = md5(uniqid());
+    }
+
     public function getId(): ?int
     {
         return $this->id;

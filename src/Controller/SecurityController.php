@@ -5,12 +5,16 @@ namespace App\Controller;
 use App\Entity\Token;
 use App\Entity\User;
 use App\Form\RegistrationType;
+use App\Repository\TokenRepository;
+use App\Security\LoginFormAuthenticator;
+use App\Service\Mailer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
+use Symfony\Component\Security\Guard\GuardAuthenticatorHandler;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
 class SecurityController extends AbstractController
@@ -43,7 +47,7 @@ class SecurityController extends AbstractController
     /**
      * @Route("/registration", name="app_registration")
      */
-    public function registration(Request $request, EntityManagerInterface $manager, UserPasswordEncoderInterface $encoder)
+    public function registration(Request $request, EntityManagerInterface $manager, UserPasswordEncoderInterface $encoder, Mailer $mailer)
     {
         $user = new User();
         $form = $this->createForm(RegistrationType::class, $user)->handleRequest($request);
@@ -56,11 +60,36 @@ class SecurityController extends AbstractController
             $manager->persist($token);
             $manager->flush();
 
+            $mailer->send($user, $token);
+
             return $this->redirectToRoute('app_login');
         }
 
         return $this->render('security/registration.html.twig', [
             'form' => $form->createView(),
         ]);
+    }
+
+    /**
+     * @Route("/valid/token/{value}", name="valid_token")
+     */
+    public function validToken(Request $request, TokenRepository $token_repository, EntityManagerInterface $manager, GuardAuthenticatorHandler $authenticator_handler, LoginFormAuthenticator $authenticator)
+    {
+        $token = $token_repository->findOneBy(['value' => $request->attributes->get('value')]);
+
+        if (is_null($token)) {
+            return $this->redirectToRoute('app_registration');
+        }
+
+        $user = $token->getUser();
+        $user->setEnable(true);
+        $manager->flush($user);
+
+        return $authenticator_handler->authenticateUserAndHandleSuccess(
+            $user,
+            $request,
+            $authenticator,
+            'main'
+        );
     }
 }

@@ -36,6 +36,21 @@ class BookRepository extends ServiceEntityRepository
         ;
     }
 
+    /**
+    * @return Book[] Returns an array of Book objects
+    */
+    public function findBooksBeginsWith(string $first_letter)
+    {
+        return $this->createQueryBuilder('b')
+            ->andWhere('b.title LIKE :title')
+            ->setParameter('title', $first_letter.'%')
+            ->orderBy('b.id', 'ASC')
+            ->setMaxResults(10)
+            ->getQuery()
+            ->getResult()
+        ;
+    }
+
 
     /*
     public function findOneBySomeField($value): ?Book

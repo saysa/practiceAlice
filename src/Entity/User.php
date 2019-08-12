@@ -46,6 +46,11 @@ class User implements UserInterface
      */
     private $token;
 
+    /**
+     * @ORM\OneToOne(targetEntity="App\Entity\Author", mappedBy="user", cascade={"persist", "remove"})
+     */
+    private $author;
+
     public function __construct()
     {
         $this->enable = false;
@@ -161,5 +166,23 @@ class User implements UserInterface
     public function isEnable(): bool
     {
         return $this->enable;
+    }
+
+    public function getAuthor(): ?Author
+    {
+        return $this->author;
+    }
+
+    public function setAuthor(?Author $author): self
+    {
+        $this->author = $author;
+
+        // set (or unset) the owning side of the relation if necessary
+        $newUser = $author === null ? null : $this;
+        if ($newUser !== $author->getUser()) {
+            $author->setUser($newUser);
+        }
+
+        return $this;
     }
 }
